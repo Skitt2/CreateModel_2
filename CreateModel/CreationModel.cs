@@ -54,6 +54,7 @@ namespace CreateModel
             CreateWindow(doc, level1, walls[1]);
             CreateWindow(doc, level1, walls[2]);
             CreateWindow(doc, level1, walls[3]);
+            AddRoof(doc, level2, walls);
 
             ts.Commit();
         }
@@ -102,6 +103,22 @@ namespace CreateModel
                 doorType.Activate();
 
             doc.Create.NewFamilyInstance(point, doorType, wall, level1, StructuralType.NonStructural);
+        }
+
+        private static void AddRoof(Document doc, Level level2, List<Wall> walls)
+        {
+            RoofType roofType = new FilteredElementCollector(doc)
+                .OfClass(typeof(RoofType))
+                .OfType<RoofType>()
+                .Where(x => x.Name.Equals("Типовой - 400мм"))
+                .Where(x => x.FamilyName.Equals("Базовая крыша"))
+                .FirstOrDefault();
+            CurveArray curveArray = new CurveArray();
+            curveArray.Append(Line.CreateBound(new XYZ(-16.73, -8.53, 13.12), new XYZ(-16.73, 0, 19.69)));
+            curveArray.Append(Line.CreateBound(new XYZ(-16.73, 0, 19.69), new XYZ(-16.73, 8.53, 13.12)));
+
+            ReferencePlane plane = doc.Create.NewReferencePlane(new XYZ(0, 0, 0), new XYZ(0, 0, 20), new XYZ(0, 20, 0), doc.ActiveView);
+            doc.Create.NewExtrusionRoof(curveArray, plane, level2, roofType, -16.73, 16.73);
         }
 
         private static void TakeLevels(Document doc, out Level level1, out Level level2)
